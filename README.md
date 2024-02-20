@@ -1,3 +1,3 @@
-# Zeepkist Freelook
+# Zeepkist Dice
 
-Allows looking up/down left/right during racing.
+Adds a chat command to zeepkist to roll dice.
