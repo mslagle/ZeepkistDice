@@ -46,7 +46,7 @@ namespace Zeepkist.Dice
         {
             Logger.LogMessage($"Received a roll command from {user} with arguments {args}");
 
-            if (ZeepkistClient.ZeepkistNetwork.IsMasterClient == false && UseOnlyAdmin.Value == true)
+            if (ZeepkistClient.ZeepkistNetwork.IsMasterClient == false && UseOnlyAdmin.Value == true && user != 0)
             {
                 Logger.LogInfo("Received a roll command and you are not the lobby owner, canceling command");
                 MessengerApi.LogWarning("Roll command received and NOT lobby host!");
