@@ -25,7 +25,8 @@ namespace Zeepkist.Dice
     {
         private Harmony harmony;
 
-        public static ConfigEntry<bool> UseOnlyAdmin { get; private set; }
+        public static ConfigEntry<int> MaxNumberofDice { get; private set; }
+        public static ConfigEntry<int> MaxNumberofSides { get; private set; }
         public static Regex DICE_REGEX = new Regex("\\d+d\\d+");
 
         private void Awake()
@@ -36,7 +37,8 @@ namespace Zeepkist.Dice
             // Plugin startup logic
             Debug.Log($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
 
-            UseOnlyAdmin = Config.Bind<bool>("Mod", "Use Only as Lobby Owner", true);
+            MaxNumberofDice = Config.Bind<int>("Mod", "Maximum number of dice", 10);
+            MaxNumberofSides = Config.Bind<int>("Mod", "Maximum number of sides", 100);
 
             ZeepSDK.ChatCommands.ChatCommandApi.RegisterMixedChatCommand<DiceCommand>();
             DiceCommand.onHandle += DiceCommand_onHandle;
@@ -46,13 +48,7 @@ namespace Zeepkist.Dice
         {
             Logger.LogMessage($"Received a roll command from {user} with arguments {args}");
 
-            if (ZeepkistClient.ZeepkistNetwork.IsMasterClient == false && UseOnlyAdmin.Value == true && user != 0)
-            {
-                Logger.LogInfo("Received a remote roll command and you are not the lobby owner, canceling command");
-                //MessengerApi.LogWarning("Roll command received and NOT lobby host!");
-                return;
-            }
-
+            // Check to make sure args are correct
             if (!DICE_REGEX.IsMatch(args))
             {
                 Logger.LogError($"The args {args} were not in the correct format!");
@@ -72,6 +68,23 @@ namespace Zeepkist.Dice
             }
 
             int[] parts = args.Split('d').Select(x => int.Parse(x)).ToArray();
+
+            // Check to make sure within ranges
+            if (parts[0] > MaxNumberofDice.Value || parts[1] > MaxNumberofSides.Value)
+            {
+                if (user == 0)
+                {
+                    // Local command
+                    MessengerApi.LogWarning("Roll command is over limits!");
+                }
+                else
+                {
+                    // Remote command
+                    ZeepSDK.Chat.ChatApi.SendMessage($"The arguments for !roll were over limits of {MaxNumberofDice.Value}d${MaxNumberofSides.Value}, try again!");
+                }
+
+                return;
+            }
 
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append($"Rolling {parts[0]} dice with {parts[1]} sides: ");
