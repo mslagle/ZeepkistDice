@@ -48,15 +48,26 @@ namespace Zeepkist.Dice
 
             if (ZeepkistClient.ZeepkistNetwork.IsMasterClient == false && UseOnlyAdmin.Value == true && user != 0)
             {
-                Logger.LogInfo("Received a roll command and you are not the lobby owner, canceling command");
-                MessengerApi.LogWarning("Roll command received and NOT lobby host!");
+                Logger.LogInfo("Received a remote roll command and you are not the lobby owner, canceling command");
+                //MessengerApi.LogWarning("Roll command received and NOT lobby host!");
                 return;
             }
 
             if (!DICE_REGEX.IsMatch(args))
             {
                 Logger.LogError($"The args {args} were not in the correct format!");
-                ZeepSDK.Chat.ChatApi.SendMessage("The arguments for !roll were not correct.  Correct format is #d#!");
+
+                if (user == 0)
+                {
+                    // Local command
+                    MessengerApi.LogWarning("Roll command was not in the correct format!");
+                }
+                else
+                {
+                    // Remote command
+                    ZeepSDK.Chat.ChatApi.SendMessage("The arguments for !roll were not correct.  Correct format is #d#!");
+                }
+                
                 return;
             }
 
